@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html>
+ <head>	
+	 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	 <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+	 <script src="js/three.min.js"></script>
+	 <script src="js/TrackballControls.js"></script>
+	 <script src="js/VTKLoader.js"></script>
+     <script src="js/MTLLoader.js"></script>
+     <script src="js/OBJMTLLoader.js"></script>
+	 <script src="js/STLLoader.js"></script>
+	 <script src="js/stats.min.js"></script>
+	 <script src="js/Detector.js"></script>
+	 <script src="js/ThreeCSG.js"></script>
+	 <script src="js/csg.js"></script>
+	 	<script src="js/Projector.js"></script>
+	 <title>webCAD</title>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+		#drawTool{
+		 background-color:LightGrey;
+		 width:20%;
+		 height:100%;
+		 float:left;
+		}
+		#divCanvas{		
+		background-color:#dcdcdc;
+		width:80%;
+		height:100%;
+		float:left;	
+		margin:0;
+
+		}
+		button{
+		margin:1px;
+		background-color:LightGrey;
+		}
+	    html,body{
+	    height:100%;
+		
+      
+		}
+		#mainCanvas{
+		height:100%;
+		width:100%;	
+        margin:0;		
+		}
+
+   </style>
+			
+		
+	
+</head>
+    
+    <body style="background-color:LightGrey" >	
+	 <div style="height:100%;width:100%;"class="container-fluid">
+	   <div
+	    <div id='drawTool'>
+	      <div class="btn-group-vertical" style="border-bottom:solid 1px AliceBlue"><h4>Design Tool</h4>
+		       <div class="dropdown">
+                   <button class="btn  dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">基本图形区
+                        <span class="caret"></span></button>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                               <li  role="presentation" ><a role="menuitem" onclick="drawPlane()" href="#">平面</a></li>
+                                <li role="presentation" ><a role="menuitem" onclick="drawCirclePlane()" href="#">圆形</a></li>
+                                <li role="presentation" ><a role="menuitem"  onclick="drawSphere()" href="#">球体</a></li>
+								<li role="presentation" ><a role="menuitem"   onclick="drawCube()" href="#">立方体</a></li>
+								<li role="presentation"><a role="menuitem"  onclick="drawCylinder()" href="#">圆柱体</a></li>
+								<li role="presentation" ><a role="menuitem"  onclick="drawTorus()" href="#">圆环</a></li>
+                        </ul>
+              </div>
+			  <ul class="nav  nav-pills nav-stacked">
+                 <li>  <button type="button" class="btn btn-md" onclick="cut()">裁剪</button></li>
+                 <li>	  <button type="button" class="btn btn-md " onclick="union()">组合</button><li>
+                 <li> <button type="button" class="btn btn-md " onclick="defaultSecene()">默认场景</button></li>	         
+		         <li>     <button type="button" class="btn btn-md " onclick="seceneRedraw()">清除</button></li>
+			 </ul> 
+
+
+          </div>
+		       
+		  <div  style="border-bottom:solid 1px AliceBlue  "><h4>Upload</h4>
+		        <ul class="nav  nav-pills nav-stacked">
+                 <li> <button id="openModle1" onclick="OpenModle1()" class="btn btn-md ">打开模型</button></li>
+                 <li> <span id="openModle2" style="display:none">选择一个模型: <input id="files" name="files[]" type="file" ></span>
+                 <li> <button class="btn btn-md" onclick="undo()">Undo</button>	</li>	         
+		         <li><button class="btn btn-md " onclick="save()">Save</button></li>
+				</ul>  
+          </div>
+			 
+		 <div id="divParameter" style="border-bottom:solid 1px AliceBlue  "><h4>Parameter</h4>
+		          <div>
+				  <span>Position</span><br>
+				    <div class="row">
+				      <div class="col-sm-4"> <label>X:<input type="tel" name="positionX"  style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/> </label></div>
+				      <div class="col-sm-4"> <label>Y: <input type="tel"  name="positionY" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/> </label></div>
+				      <div class="col-sm-4"> <label>Z: <input type="tel"  name="positionZ" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/> </label></div>
+				    </div>
+					</div>
+				  <div>
+				  <span>Rotation</span><br>
+				    <div class="row">
+				      <div class="col-sm-4"> <label>X: <input type="tel"  name="rotationX" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>
+				      <div class="col-sm-4"> <label>Y: <input type="tel"  name="rotationY" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>
+				       <div class="col-sm-4"> <label>Z: <input type="tel"  name="rotationZ" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>
+				   </div>
+				  </div>
+				  <div>
+				  <span>Scale</span><br>
+				  <div class="row">
+				 <div class="col-sm-4"><label>X: <input type="tel"  name="scaleX" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>
+				 <div class="col-sm-4"><label>Y: <input type="tel"  name="scaleY" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>
+				<div class="col-sm-4"> <label>Z: <input type="tel"  name="scaleZ" style="background-color:transparent;border:1px solid transparent;width:50px;cursor: col-resize;"/></label> </div>	 
+                  </div>					  
+		       </div>
+	   </div>
+         </div>
+		 <div id="divCanvas" >
+            <canvas id="mainCanvas" width=1980 height=2000></canvas>			
+		</div>			
+</div>
+    </body>
+        <script>
+		   Array.prototype.remove=function(obj){
+                              for(var i =0;i <this.length;i++){
+
+                                           var temp = this[i];
+                                         if(!isNaN(obj)){
+                                           temp=i;
+                                           }
+                                        if(temp == obj){
+                                             for(var j = i;j <this.length;j++){
+                                                     this[j]=this[j+1];
+                                            }
+                                        this.length = this.length-1;
+                                        }
+                                }
+                        }
+</script>		   
+        <script>
+		    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+             var renderer,
+                scene,
+				camera,
+                defaultCamera,				
+				controls,
+				vector,
+				mesh,
+				light,
+				loaderSTL,
+				container,
+				picked,
+				cross;
+		  var      positionX=document.getElementsByName("positionX")[0],
+				   positionY=document.getElementsByName("positionY")[0],
+				   positionZ=document.getElementsByName("positionZ")[0],
+				   rotationX=document.getElementsByName("rotationX")[0],
+				   rotationY=document.getElementsByName("rotationY")[0],
+				   rotationZ=document.getElementsByName("rotationZ")[0],
+				   scaleX=document.getElementsByName("scaleX")[0],
+				   scaleY=document.getElementsByName("scaleY")[0],
+				   scaleZ=document.getElementsByName("scaleZ")[0];
+			var cutedObject=null,cutObject=[];
+			var cutFlag=false,unionFlag=false;
+			var  objects=[],plane;
+			var  isCtrlDown = false,isShiftDown =false;
+            var mouse=new THREE.Vector2(),
+                offset=new THREE.Vector3(),
+                INTERSECTED,SELECTED;				
+				var canvas= document.getElementById('mainCanvas');
+				var canvasWidth=parseInt($("#mainCanvas").css("width"));
+				var canvasHeight=parseInt($("#mainCanvas").css("height"));
+	           $(document).ready(function(){ 
+				   initCanvas();
+			       animate();	
+				 
+				$("#mainCanvas").bind({mouseenter:function(){
+				                                          controls.noZoom=false;
+				                                          controls.noPan=false;
+														  controls.noRotate=false;
+														  },
+									  mouseleave:function(){controls.noZoom=true;
+									                      controls.noPan=true;
+														  controls.noRotate=true;														
+														  }
+									});
+				$("#divParameter").bind({mouseenter:function(){controls.enabled=false;},
+				                          mouseleave:function(){controls.enabled=true;},
+				});
+				$("ul.dropdown-menu").on("click", "[data-stopPropagation]", function(e) {
+                     e.stopPropagation();
+                });
+				$("input").blur(function(){
+				      $("input").css({"border":"1px solid transparent","background-color":"transparent","cursor": "col-resize"});				
+				});
+				$("button").bind({mouseenter:function(){
+				                                           $(this).css({"background-color":"DarkCyan"});	
+														  },
+							mouseleave:function(){ 
+									            $(this).css({"background-color":"LightGrey"});														
+														  }
+									});
+				//改变参数
+				
+				
+			  
+		 });
+		 
+		 function parameter(position,dom){
+		    var scope = this;
+
+	//var dom = positionX;
+	//dom.className = 'Number';
+	//dom.style.position = position || 'relative';
+	//dom.style.color = '#0080f0';
+	//dom.style.fontSize = '12px';
+	//dom.style.backgroundColor = 'transparent';
+	//dom.style.border = '1px solid transparent';
+	//dom.style.marginTop = '-2px';
+	//dom.style.marginLegt = '-2px';
+	//dom.style.padding = '2px';
+	//dom.style.cursor = 'col-resize';
+	dom.value = '0.00';
+
+	this.dom = dom;
+
+	this.min = - Infinity;
+	this.max = Infinity;
+
+	this.precision = 2;
+	this.step = 1;
+
+	this.onChangeCallback = null;
+
+	var distance = 0;
+	var onMouseDownValue = 0;
+
+	var onMouseDown = function ( event ) {
+
+		event.preventDefault();
+
+		distance = 0;
+
+		onMouseDownValue = parseFloat( dom.value );
+
+		document.addEventListener( 'mousemove', onMouseMove, false );
+		document.addEventListener( 'mouseup', onMouseUp, false );
+
+	};
+
+	var onMouseMove = function ( event ) {
+
+		var movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+		var movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+
+		distance += movementX - movementY;
+
+		var number = onMouseDownValue + ( distance / ( event.shiftKey ? 10 : 100 ) ) * scope.step;
+
+		dom.value = Math.min( scope.max, Math.max( scope.min, number ) ).toFixed( scope.precision );
+		redraw(dom);
+
+		if ( scope.onChangeCallback ) scope.onChangeCallback();
+
+	};
+      var redraw=function (dom){
+	  
+	    switch (dom){
+		
+		case positionX:
+		   picked.position.x=dom.value;
+		   break;
+		case positionY:
+		   picked.position.y=dom.value;
+		   break;
+		   case positionZ:
+		   picked.position.z=dom.value;
+		   break;
+		   case rotationX:
+		   picked.rotation.x=dom.value;
+		   break;
+        case rotationY:
+		   picked.rotation.y=dom.value;
+		   break;
+        case rotationX:
+		   picked.rotation.x=dom.value;
+		   break;
+		   case scaleX:
+		   picked.scale.x=dom.value;
+		   break;
+        case scaleY:
+		   picked.scale.y=dom.value;
+		   break;
+		      case scaleZ:
+		   picked.scale.z=dom.value;
+		   break;
+		
+		}
+	  
+	  
+	  
+	  
+	  }
+	var onMouseUp = function ( event ) {
+
+		document.removeEventListener( 'mousemove', onMouseMove, false );
+		document.removeEventListener( 'mouseup', onMouseUp, false );
+
+		if ( Math.abs( distance ) < 2 ) {
+
+			dom.focus();
+			dom.select();
+
+		}
+
+	};
+
+	var onChange = function ( event ) {
+
+		var number = parseFloat( dom.value );
+
+		if ( isNaN( number ) === false ) {
+
+			dom.value = number;
+
+			if ( scope.onChangeCallback ) scope.onChangeCallback();
+
+		}
+
+	};
+
+	var onFocus = function ( event ) {
+
+		dom.style.backgroundColor = '';
+		dom.style.borderColor = '#ccc';
+		dom.style.cursor = '';
+
+	};
+
+	var onBlur = function ( event ) {
+
+	//	dom.style.backgroundColor = 'transparent';
+	//	dom.style.borderColor = 'transparent';
+	//	dom.style.cursor = 'col-resize';
+
+	};
+
+	dom.addEventListener( 'mousedown', onMouseDown, false );
+	dom.addEventListener( 'change', onChange, false );
+	dom.addEventListener( 'focus', onFocus, false );
+	dom.addEventListener( 'blur', onBlur, false );
+
+//	return this;
+		 
+		 
+		 
+		 
+		 
+		 
+		 }
+
+           //初始画布
+            function initCanvas() {
+               
+				   parameter("absolute",positionX);
+				  parameter("absolute",positionY);
+				   parameter("absolute",positionZ);
+				    parameter("absolute",rotationX); 
+					parameter("absolute",rotationY);
+					parameter("absolute",rotationY);
+					parameter("absolute",rotationZ);
+					parameter("absolute",scaleX);
+					parameter("absolute",scaleY);
+					parameter("absolute",scaleZ);
+			       seceneRedraw();
+				
+
+				  
+				  
+          
+
+				
+
+				
+				
+				var material = new THREE.MeshLambertMaterial( { color:0xffffff, side: THREE.DoubleSide } );
+                
+             	plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true, wireframe: true } ) );
+				plane.rotation.x = - Math.PI / 2;
+				plane.visible=false;	
+
+
+				
+
+	
+				vector=new THREE.Vector3();
+				
+				container=document.getElementById("mainCanvas");
+				 renderer = new THREE.WebGLRenderer({
+                    canvas: document.getElementById('mainCanvas'),
+					antialias:false
+                }); 
+
+				renderer.sortObjects = false;
+				renderer.setClearColor( 0xaaaaaa);
+				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+				document.addEventListener( 'keyup', onDocumentKeyUp, false );
+				 
+				 //加载VTK格式
+				//var loaderVTK = new THREE.VTKLoader();
+				 //   loaderVTK.addEventListener( 'load', function ( event ) {
+				//	var geometry = event.content;
+				//	var mesh = new THREE.Mesh( geometry, material );
+				//	mesh.position.setY( - 0.09 );
+				//	scene.add( mesh );
+
+				//} );
+				//loaderVTK.load( "bunny.vtk" );
+				
+				
+                loaderSTL = new THREE.STLLoader();
+					loaderSTL.addEventListener('load',function( event ){
+					var geometry = event.content;
+					var mesh = new THREE.Mesh( geometry, material );
+					var s=0.005;
+					mesh.scale.set( s, s, s );
+					mesh.position.setY( - 0.09 );
+					scene.add( mesh );	
+					objects.push(mesh);
+					renderer.render(scene,camera);
+				});                	
+            }
+			var loaderOBJMIT = new THREE.OBJMTLLoader();
+				loaderOBJMIT.addEventListener( 'load', function ( event ) {
+
+					var object = event.content;
+
+					object.position.y = - 80;
+					//var s=0.005;
+					//object.scale.set(s,s,s,);
+					scene.add( object );
+				
+					//renderer.render(scene,camera);
+
+				});
+			//	loaderOBJMIT.load( 'myFace3dModle.obj', 'myFace3dModle.mtl' );
+				//loaderOBJMIT.load( 'male02.obj', 'male02_dds.mtl' );
+			
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				controls.update();
+				renderer.render( scene, camera );
+
+			//	stats.update();
+
+			}
+			function seceneRedraw(){
+			    
+				 defaultSecene();
+
+				controls.rotateSpeed = 5.0;
+				controls.zoomSpeed = 5;
+				controls.panSpeed = 2;
+                
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
+	  
+                scene = new THREE.Scene();	
+               var ambientLight = new THREE.AmbientLight( 0x000000 );
+			    scene.add( ambientLight );	             			
+                scene.add(camera);
+				
+				var size = 5, step = 0.5;
+
+				var geometry = new THREE.Geometry();
+
+				for ( var i = - size; i <= size; i += step ) {
+
+					geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
+					geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
+
+					geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
+					geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
+
+				}
+
+				var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.8, transparent: true } );
+
+				var gridPlane = new THREE.Line( geometry, material, THREE.LinePieces );
+				scene.add( gridPlane);
+				
+			  var  axisObject = new THREE.AxisHelper(1);
+				axisObject.position.set( 0, 0, 0 );
+				scene.add( axisObject );
+			
+			}
+		     function  union()
+			 {
+			   	unionFlag=true		 
+			 
+			 }
+			function cut(){
+			
+			cutFlag=true;
+			
+			}
+			function defaultSecene(){
+			    camera = new THREE.PerspectiveCamera( 40,canvasWidth/canvasHeight, 0.01,1000);
+				camera.position.z=5;
+				camera.position.x=5;
+				camera.position.y=5;	
+                controls = new THREE.TrackballControls( camera );	
+				var dirLight = new THREE.DirectionalLight( 0xffffff );
+				dirLight.position.set( 200, 200, 1000 ).normalize();
+				camera.add( dirLight );
+				camera.add( dirLight.target );				
+			}
+			//绘图函数
+			function drawPlane(){
+			    var planeMesh= new THREE.Mesh(new THREE.PlaneGeometry(3,3),	                      
+									        
+											new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, opacity:0.5,side:THREE.DoubleSide})
+									  
+									  );
+					scene.add(planeMesh);
+					objects.push( planeMesh);
+			}
+			function drawCirclePlane(){
+			    var circleMesh= new THREE.Mesh(new THREE.CircleGeometry(1,100),	                      
+									        
+											new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, opacity:0.5,side:THREE.DoubleSide})
+									  
+									  );
+					scene.add(circleMesh);
+					objects.push(circleMesh);
+			}
+			function drawCube(){
+			 var cube = new THREE.BoxGeometry(1, 1, 1);
+			  var   mesh=new THREE.Mesh(cube,new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff, opacity:0.5} ));
+                scene.add(mesh);
+				objects.push( mesh);
+		    }
+		   function drawSphere(){
+			 var sphere = new THREE.Mesh(new THREE.SphereGeometry(1,180,200),
+                                          new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, opacity:0.5})	
+                                       );
+                    scene.add(sphere);
+					objects.push( sphere);
+		    }
+		  function drawTorus(){
+			 var torus= new THREE.Mesh(new THREE.TorusGeometry(1,0.3, 40,40),
+                                        new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, opacity:0.5})	
+                     );
+                scene.add(torus);
+				objects.push( torus );
+		    }
+			function drawCylinder(){
+	
+			 var cylinder= new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,40,10),
+			                              new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff, opacity:0.5})						         
+                     );
+				scene.add(cylinder);
+				objects.push(cylinder);
+
+		    }			
+        </script>
+        <script type="text/javascript">
+        function handleFileSelect(evt) {
+
+                    document.getElementById("openModle1").style.display = "inline";
+                    document.getElementById("openModle2").style.display = "none";
+                    var files = evt.target.files; // FileList object
+                    var tmppath = URL.createObjectURL(event.target.files[0]);//获得绝对地址
+	                var urlString=tmppath.toString();
+                     loaderSTL.load(urlString);
+}
+
+        document.getElementById('files').addEventListener('change', handleFileSelect, false);
+        function OpenModle1() {
+              document.getElementById("openModle1").style.display = "none";
+              document.getElementById("openModle2").style.display = "inline";
+}
+         function onDocumentMouseMove( event ) {
+                
+				event.preventDefault();
+			    var x=event.pageX-container.offsetLeft;
+				var y=event.pageY-container.offsetTop;
+			    mouse.x = ( x / canvasWidth) * 2 - 1;
+			    mouse.y = - (y /canvasHeight) * 2 + 1;
+				
+
+				//
+
+				vector.set( mouse.x , mouse.y, 0.5 );
+				vector.unproject( camera );
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+                 
+				if ((!cutFlag)&&(!unionFlag)&&SELECTED) {
+					var intersects = raycaster.intersectObject( plane );
+					SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+					updateParameter(picked);
+					return;
+
+				}
+
+
+				var intersects = raycaster.intersectObjects( objects );
+
+				if ( intersects.length > 0 ) {
+
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+
+						if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+
+					plane.position.copy( INTERSECTED.position );
+					plane.lookAt( camera.position );
+
+					}
+                   
+					container.style.cursor = 'pointer';
+
+				} else {
+
+					if ( INTERSECTED ) INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+
+					INTERSECTED = null;
+
+					container.style.cursor = 'auto';
+
+				}
+
+			}
+			
+			function onDocumentMouseDown( event ) {
+
+				event.preventDefault();
+
+				vector.set( mouse.x , mouse.y, 0.5 );
+				vector.unproject( camera );
+				var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects(objects);
+				if ( intersects.length > 0 ) {
+				
+
+					controls.enabled = false;
+					SELECTED = intersects[ 0 ].object;
+					if(cutFlag||unionFlag){
+					     var selectedMesh=SELECTED;
+	                     geometry_Cut(selectedMesh);
+						//scene.remove( SELECTED);
+						 SELECTED=null;
+                         return;						 
+					}
+					
+					if ( isCtrlDown ) {
+                          
+						if ( SELECTED!= plane ) {
+						    objects.remove(SELECTED);
+							scene.remove( SELECTED);
+
+						}
+					}					
+					picked=SELECTED;
+
+					
+					//var geometryCSG=THREE.CSG.toCSG(SELECTED.geometry);
+					
+					var intersects = raycaster.intersectObject( plane );
+					offset.copy( intersects[ 0 ].point ).sub( plane.position );
+                    container.style.cursor = 'move';  
+                    					
+				}
+				
+				                  
+
+			}
+
+			function onDocumentMouseUp( event ) {
+
+				event.preventDefault();
+
+				controls.enabled = true;
+
+				if ( INTERSECTED ) {
+
+					plane.position.copy( INTERSECTED.position );
+
+					SELECTED = null;
+
+				}
+
+				container.style.cursor = 'auto';
+
+			}
+function onDocumentKeyDown( event ) {
+
+				switch( event.keyCode ) {
+				
+					case 17: isCtrlDown = true; break;
+					case 16: isShiftDown = true; break;
+
+				}
+
+			}
+			function onDocumentKeyUp( event ) {
+
+				switch( event.keyCode ) {
+					case 17: isCtrlDown = false; break;
+					case 16: isShiftDown = false;	         
+							 cutOut();
+					         break;
+
+				}
+			}
+			 function  geometry_Cut(mesh){
+			       if(isShiftDown){
+				   cutObject.push(mesh);				   				   
+				   }
+				   else{
+				     cutedObject=mesh;				   
+				   }			 
+
+			 
+			 
+			 }
+			 function cutOut(){
+				var cuted_BSP=new ThreeBSP(cutedObject);
+				var cut_BSP=[];
+				var  remainObject;
+				for(var index=0;index<cutObject.length;index++){
+				
+				cut_BSP.push(new ThreeBSP( cutObject[index]));
+				}
+				if(cutFlag){
+				         for(var index=0;index<cut_BSP.length;index++){				             
+							 cuted_BSP=cuted_BSP.subtract(cut_BSP[index]);
+				          }
+						  cutFlag=false;
+				  }
+				else if(unionFlag){
+				         for(var index=0;index<cut_BSP.length;index++){
+							 cuted_BSP=cuted_BSP.union(cut_BSP[index]);
+				          }
+						 unionFlag=false;
+				  }
+				remainObject=cuted_BSP.toMesh(cutedObject.material);
+				remainObject.geometry.computeVertexNormals();
+				objects.remove(cutedObject);
+				scene.remove(cutedObject);
+				for(var index=0;index<cut_BSP.length;index++){
+				  
+				  scene.remove(cutObject[index]);
+				  objects.remove(cutObject[index]);
+				
+				}
+				scene.add(remainObject);
+				objects.push(remainObject);  
+                cutedObject=null;
+                cutObject=[];					
+			}
+			 function updateParameter(object){
+			 
+			    positionX.value=object.position.x.toFixed(2);
+			    positionY.value=object.position.x.toFixed(2);
+				positionZ.value=object.position.x.toFixed(2);
+				rotationX.value=object.rotation.x.toFixed(2);
+				rotationY.value=object.rotation.y.toFixed(2);
+				rotationZ.value=object.rotation.z.toFixed(2);
+				scaleX.value=object.scale.x.toFixed(2);
+				scaleY.value=object.scale.y.toFixed(2);
+				scaleZ.value=object.scale.z.toFixed(2);		   
+		   }
+			
+
+          
+
+        </script>
+     <script>
+		
+		
+		
+		</script>
+</html>
